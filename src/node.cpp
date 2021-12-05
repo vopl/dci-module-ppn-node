@@ -5,6 +5,7 @@
    of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more details.
    You should have received a copy of the GNU Affero General Public License along with this program. If not, see <https://www.gnu.org/licenses/>. */
 
+#include "dci/cmt/functions.hpp"
 #include "pch.hpp"
 #include "node.hpp"
 #include "node/utils.hpp"
@@ -323,6 +324,7 @@ namespace dci::module::ppn
     void Node::stop()
     {
         _started = false;
+        sol().flush();
 
         for(const auto&[i, m] : _nattMappings)
         {
@@ -382,14 +384,14 @@ namespace dci::module::ppn
     void Node::emitFail(const std::string& comment)
     {
         auto e = exception::buildInstance<api::Error>(comment);
-        _featureService->failed(e);
+        if(_started) _featureService->failed(e);
     }
 
     /////////0/////////1/////////2/////////3/////////4/////////5/////////6/////////7
     void Node::emitFail(ExceptionPtr e, const std::string& comment)
     {
         e = exception::buildInstance<api::Error>(std::move(e), comment);
-        _featureService->failed(e);
+        if(_started) _featureService->failed(e);
     }
 
     /////////0/////////1/////////2/////////3/////////4/////////5/////////6/////////7

@@ -17,6 +17,10 @@
 #include <dci/utils/net/url.hpp>
 #include <dci/utils/net/ip.hpp>
 #include <dci/utils/atScopeExit.hpp>
+#ifdef _WIN32
+#   include <dci/utils/win32/error.hpp>
+#endif
+
 #include <regex>
 #include <functional>
 #include <filesystem>

@@ -17,9 +17,9 @@ key auto
 
 accept
 {
-    inproc on
+    inproc off
 
-    local on
+    local off
 
     ip6 on
     {
@@ -55,7 +55,7 @@ natt
     pmp on
     pcp on
     igdp on
-    awsEc2 on
+    awsEc2 off
     custom
     {
         ;tcp4://192.168.0.2:48612 tcp4://1.2.3.4:48612
@@ -74,7 +74,6 @@ connect
     ;custom tcp4://
     ;custom tcp6://
 }
-
 
 features
 {

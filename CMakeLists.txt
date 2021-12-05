@@ -11,6 +11,10 @@ add_library(${UNAME} MODULE ${INC} ${SRC} ${IDL})
 target_include_directories(${UNAME} PRIVATE src)
 target_link_libraries(${UNAME} PRIVATE crypto config)
 
+if(WIN32)
+    target_link_libraries(${UNAME} PRIVATE Iphlpapi.lib)
+endif()
+
 ##############################################################
 include(dciIdl)
 dciIdl(${UNAME} cpp

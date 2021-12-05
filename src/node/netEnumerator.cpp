@@ -7,7 +7,6 @@
 
 #include "pch.hpp"
 #include "netEnumerator.hpp"
-#include <arpa/inet.h>
 
 extern dci::host::module::Entry* dciModuleEntry;
 

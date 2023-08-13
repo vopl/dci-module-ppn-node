@@ -18,8 +18,8 @@ namespace dci::module::ppn::node
     public:
         struct Address
         {
-            utils::net::ip::Scope   _scope {};
-            std::string             _value;
+            utils::ip::Scope _scope {};
+            std::string      _value;
 
             bool operator <(const Address& v) const
             {

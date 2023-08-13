@@ -14,8 +14,8 @@
 #include <dci/crypto/rnd.hpp>
 #include <dci/crypto/blake2b.hpp>
 #include <dci/utils/h2b.hpp>
-#include <dci/utils/net/url.hpp>
-#include <dci/utils/net/ip.hpp>
+#include <dci/utils/uri.hpp>
+#include <dci/utils/ip.hpp>
 #include <dci/utils/atScopeExit.hpp>
 #ifdef _WIN32
 #   include <dci/utils/win32/error.hpp>

@@ -163,12 +163,12 @@ namespace dci::module::ppn::node
 
         if(utils::parseBool(conf.get("ip4", "true")))
         {
-            autoConfIp(conf.get_child("ip4", decltype(conf){}), netEnumeratorProvider, static_cast<uint32>(dci::utils::net::ip::Scope::ip4));
+            autoConfIp(conf.get_child("ip4", decltype(conf){}), netEnumeratorProvider, static_cast<uint32>(dci::utils::ip::Scope::ip4));
         }
 
         if(utils::parseBool(conf.get("ip6", "true")))
         {
-            autoConfIp(conf.get_child("ip6", decltype(conf){}), netEnumeratorProvider, static_cast<uint32>(dci::utils::net::ip::Scope::ip6));
+            autoConfIp(conf.get_child("ip6", decltype(conf){}), netEnumeratorProvider, static_cast<uint32>(dci::utils::ip::Scope::ip6));
         }
     }
 
@@ -181,10 +181,10 @@ namespace dci::module::ppn::node
         std::string port = conf.get("port", "");
 
         uint32 scopes = 0;
-        if(utils::parseBool(conf.get("host", "true"))) scopes |= static_cast<uint32>(dci::utils::net::ip::Scope::host);
-        if(utils::parseBool(conf.get("link", "true"))) scopes |= static_cast<uint32>(dci::utils::net::ip::Scope::link);
-        if(utils::parseBool(conf.get("lan" , "true"))) scopes |= static_cast<uint32>(dci::utils::net::ip::Scope::lan );
-        if(utils::parseBool(conf.get("wan" , "true"))) scopes |= static_cast<uint32>(dci::utils::net::ip::Scope::wan );
+        if(utils::parseBool(conf.get("host", "true"))) scopes |= static_cast<uint32>(dci::utils::ip::Scope::host);
+        if(utils::parseBool(conf.get("link", "true"))) scopes |= static_cast<uint32>(dci::utils::ip::Scope::link);
+        if(utils::parseBool(conf.get("lan" , "true"))) scopes |= static_cast<uint32>(dci::utils::ip::Scope::lan );
+        if(utils::parseBool(conf.get("wan" , "true"))) scopes |= static_cast<uint32>(dci::utils::ip::Scope::wan );
 
         auto filter = [=](const NetEnumerator::Address& a, transport::Address& ta)
         {
@@ -198,11 +198,11 @@ namespace dci::module::ppn::node
                 return false;
             }
 
-            if(static_cast<uint32>(a._scope) & static_cast<uint32>(dci::utils::net::ip::Scope::ip4))
+            if(static_cast<uint32>(a._scope) & static_cast<uint32>(dci::utils::ip::Scope::ip4))
             {
                 ta.value = "tcp4://" + a._value + (port.empty() ? port : ":"+port);
             }
-            else if(static_cast<uint32>(a._scope) & static_cast<uint32>(dci::utils::net::ip::Scope::ip6))
+            else if(static_cast<uint32>(a._scope) & static_cast<uint32>(dci::utils::ip::Scope::ip6))
             {
                 ta.value = "tcp6://[" + a._value + "]" + (port.empty() ? port : ":"+port);
             }
@@ -238,7 +238,7 @@ namespace dci::module::ppn::node
         {
             std::string addr = iter->second.data();
 
-            if(!dci::utils::net::url::valid(addr))
+            if(!dci::utils::uri::valid(addr))
             {
                 throw api::Error("bad address value in config: "+addr);
             }

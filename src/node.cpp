@@ -429,17 +429,14 @@ namespace dci::module::ppn
     /////////0/////////1/////////2/////////3/////////4/////////5/////////6/////////7
     transport::Address Node::fixAcceptorAddress(const transport::Address& a)
     {
-        auto scheme = dci::utils::net::url::scheme(a.value);
-        using namespace std::literals;
-
-        if("local"sv   == scheme)
+        dci::utils::URI<> uri;
+        if(dci::utils::uri::parse(a.value, uri))
         {
-            return transport::Address{fixAuto(a.value, "dci-ppn-node-"+node::utils::mkRandomName(32)+".sock")};
-        }
+            if(std::holds_alternative<dci::utils::uri::Inproc<>>(uri))
+                return transport::Address{fixAuto(a.value, node::utils::mkRandomName(32))};
 
-        if("inproc"sv   == scheme)
-        {
-            return transport::Address{fixAuto(a.value, node::utils::mkRandomName(32))};
+            if(std::holds_alternative<dci::utils::uri::Local<>>(uri))
+                return transport::Address{fixAuto(a.value, "dci-ppn-node-"+node::utils::mkRandomName(32)+".sock")};
         }
 
         return a;
@@ -448,17 +445,14 @@ namespace dci::module::ppn
     /////////0/////////1/////////2/////////3/////////4/////////5/////////6/////////7
     transport::Address Node::fixConnectorAddress(const transport::Address& a)
     {
-        auto scheme = dci::utils::net::url::scheme(a.value);
-        using namespace std::literals;
-
-        if("local"sv   == scheme)
+        dci::utils::URI<> uri;
+        if(dci::utils::uri::parse(a.value, uri))
         {
-            return transport::Address{fixAuto(a.value, std::string{})};
-        }
+            if(std::holds_alternative<dci::utils::uri::Inproc<>>(uri))
+                return transport::Address{fixAuto(a.value, std::string{})};
 
-        if("inproc"sv   == scheme)
-        {
-            return transport::Address{fixAuto(a.value, std::string{})};
+            if(std::holds_alternative<dci::utils::uri::Local<>>(uri))
+                return transport::Address{fixAuto(a.value, std::string{})};
         }
 
         return a;
@@ -467,68 +461,82 @@ namespace dci::module::ppn
     /////////0/////////1/////////2/////////3/////////4/////////5/////////6/////////7
     transport::acceptor::Downstream<> Node::makeAcceptor(const transport::Address& a)
     {
-        auto scheme = dci::utils::net::url::scheme(a.value);
-        using namespace std::literals;
-
-        if("tcp4"sv  == scheme ||
-           "tcp6"sv  == scheme ||
-           "tcp"sv   == scheme)
+        dci::utils::URI<> uri;
+        if(!dci::utils::uri::parse(a.value, uri))
         {
-            transport::net::Acceptor<> res = dciModuleEntry->manager()->createService<transport::net::Acceptor<>>().value();
-            res->bind(a).value();
-            return transport::acceptor::Downstream<>(res);
+            emitFail("malformed address: "+a.value);
+            dbgWarn("malformed address");
+            return transport::acceptor::Downstream<>();
         }
 
-        if("local"sv   == scheme)
-        {
-            transport::net::Acceptor<> res = dciModuleEntry->manager()->createService<transport::net::Acceptor<>>().value();
-            res->bind(a).value();
-            return transport::acceptor::Downstream<>(res);
-        }
+        return std::visit([&]<class Alt>(const Alt& /*alt*/)
+                          {
+                              if constexpr(std::is_same_v<dci::utils::uri::TCP<>, Alt> || std::is_base_of_v<dci::utils::uri::TCP<>, Alt>)
+                              {
+                                  transport::net::Acceptor<> res = dciModuleEntry->manager()->createService<transport::net::Acceptor<>>().value();
+                                  res->bind(a).value();
+                                  return transport::acceptor::Downstream<>(res);
+                              }
 
-        if("inproc"sv   == scheme)
-        {
-            transport::inproc::Acceptor<> res = dciModuleEntry->manager()->createService<transport::inproc::Acceptor<>>().value();
-            res->bind(a).value();
-            return transport::acceptor::Downstream<>(res);
-        }
+                              if constexpr(std::is_same_v<dci::utils::uri::Local<>, Alt>)
+                              {
+                                  transport::net::Acceptor<> res = dciModuleEntry->manager()->createService<transport::net::Acceptor<>>().value();
+                                  res->bind(a).value();
+                                  return transport::acceptor::Downstream<>(res);
+                              }
 
-        emitFail("unknown address scheme: "+std::string(scheme));
-        dbgWarn("unknown address scheme");
-        return transport::acceptor::Downstream<>();
+                              if constexpr(std::is_same_v<dci::utils::uri::Inproc<>, Alt>)
+                              {
+                                  transport::inproc::Acceptor<> res = dciModuleEntry->manager()->createService<transport::inproc::Acceptor<>>().value();
+                                  res->bind(a).value();
+                                  return transport::acceptor::Downstream<>(res);
+                              }
+
+                              emitFail("malformed address: "+a.value);
+                              dbgWarn("malformed address");
+                              return transport::acceptor::Downstream<>();
+
+                          }, uri);
     }
 
     /////////0/////////1/////////2/////////3/////////4/////////5/////////6/////////7
     transport::connector::Downstream<> Node::makeConnector(const transport::Address& a)
     {
-        auto scheme = dci::utils::net::url::scheme(a.value);
-        using namespace std::literals;
-
-        if("tcp4"sv  == scheme ||
-           "tcp6"sv  == scheme ||
-           "tcp"sv   == scheme)
+        dci::utils::URI<> uri;
+        if(!dci::utils::uri::parse(a.value, uri))
         {
-            transport::net::Connector<> res = dciModuleEntry->manager()->createService<transport::net::Connector<>>().value();
-            res->bind(a).value();
-            return transport::connector::Downstream<>(res);
+            emitFail("malformed address: "+a.value);
+            dbgWarn("malformed address");
+            return transport::acceptor::Downstream<>();
         }
 
-        if("local"sv   == scheme)
-        {
-            transport::net::Connector<> res = dciModuleEntry->manager()->createService<transport::net::Connector<>>().value();
-            res->bind(a).value();
-            return transport::connector::Downstream<>(res);
-        }
+        return std::visit([&]<class Alt>(const Alt& /*alt*/)
+                          {
+                              if constexpr(std::is_same_v<dci::utils::uri::TCP<>, Alt> || std::is_base_of_v<dci::utils::uri::TCP<>, Alt>)
+                              {
+                                  transport::net::Connector<> res = dciModuleEntry->manager()->createService<transport::net::Connector<>>().value();
+                                  res->bind(a).value();
+                                  return transport::connector::Downstream<>(res);
+                              }
 
-        if("inproc"sv   == scheme)
-        {
-            transport::inproc::Connector<> res = dciModuleEntry->manager()->createService<transport::inproc::Connector<>>().value();
-            return transport::connector::Downstream<>(res);
-        }
+                              if constexpr(std::is_same_v<dci::utils::uri::Local<>, Alt>)
+                              {
+                                  transport::net::Connector<> res = dciModuleEntry->manager()->createService<transport::net::Connector<>>().value();
+                                  res->bind(a).value();
+                                  return transport::connector::Downstream<>(res);
+                              }
 
-        emitFail("unknown address scheme: "+std::string(scheme));
-        dbgWarn("unknown address scheme");
-        return transport::connector::Downstream<>();
+                              if constexpr(std::is_same_v<dci::utils::uri::Inproc<>, Alt>)
+                              {
+                                  transport::inproc::Connector<> res = dciModuleEntry->manager()->createService<transport::inproc::Connector<>>().value();
+                                  return transport::connector::Downstream<>(res);
+                              }
+
+                              emitFail("malformed address: "+a.value);
+                              dbgWarn("malformed address");
+                              return transport::connector::Downstream<>();
+
+                          }, uri);
     }
 
     /////////0/////////1/////////2/////////3/////////4/////////5/////////6/////////7

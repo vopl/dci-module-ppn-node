@@ -97,16 +97,16 @@ namespace dci::module::ppn::node
             if(src.holds<net::link::Ip4Address>())
             {
                 const net::Ip4Address& ip4 = src.get<net::link::Ip4Address>().address;
-                res._scope = utils::net::ip::scope(ip4.octets);
-                res._value = utils::net::ip::toString(ip4.octets);
+                res._scope = utils::ip::scope(ip4.octets);
+                res._value = utils::ip::toString(ip4.octets);
             }
             else //if(src.holds<net::link::Ip6Address>())
             {
                 dbgAssert(src.holds<net::link::Ip6Address>());
 
                 const net::Ip6Address& ip6 = src.get<net::link::Ip6Address>().address;
-                res._scope = utils::net::ip::scope(ip6.octets);
-                res._value = utils::net::ip::toString(ip6.octets, ip6.linkId);
+                res._scope = utils::ip::scope(ip6.octets);
+                res._value = utils::ip::toString(ip6.octets, ip6.linkId);
             }
 
             return res;
